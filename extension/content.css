@@ -1,0 +1,21 @@
+/* DeepShield Content Script Styles */
+/* Base styles are injected dynamically via JavaScript for scoping */
+/* This file provides additional utility styles */
+
+@keyframes deepshield-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+  }
+}
+
+@keyframes deepshield-scan {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}

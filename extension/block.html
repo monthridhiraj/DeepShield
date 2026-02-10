@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detected - DeepShield</title>
+    <link rel="stylesheet" href="block.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon-wrapper">
+            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#ff4d4d" stroke="none" />
+                <path d="M12 6V13" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <path d="M12 16V16.01" stroke="white" stroke-width="2" stroke-linecap="round" />
+            </svg>
+        </div>
+
+        <h1>Phishing Detected</h1>
+        <p class="warning-text">
+            DeepShield has blocked access to this page because it was identified as a phishing attempt.
+            Attackers on this site may trick you into revealing sensitive information like passwords or credit card
+            numbers.
+        </p>
+
+        <div class="url-box">
+            <span class="url-label">Blocked URL:</span>
+            <code id="blocked-url">Loading...</code>
+        </div>
+
+        <div class="actions">
+            <button id="go-back-btn" class="primary-btn">Go Back to Safety</button>
+            <button id="advanced-btn" class="text-btn">Advanced Options</button>
+        </div>
+
+        <div id="advanced-options" class="hidden">
+            <p>If you trust this website, you can whitelist it or proceed at your own risk.</p>
+            <div class="advanced-actions">
+                <button id="whitelist-btn" class="secondary-btn">Whitelist & Proceed</button>
+                <button id="proceed-btn" class="danger-btn">Proceed (Unsafe)</button>
+            </div>
+        </div>
+    </div>
+    <script src="block.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepShield - Phishing Detection</title>
+    <meta name="description" content="DeepShield phishing detection system" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b1020;
+        --bg-2: #0e1a33;
+        --panel: rgba(18, 24, 44, 0.82);
+        --panel-solid: #111a33;
+        --border: rgba(148, 163, 184, 0.2);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-2: #60a5fa;
+        --success: #34d399;
+        --warning: #fbbf24;
+        --danger: #f87171;
+        --shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 12% 8%, rgba(56, 189, 248, 0.18), transparent 55%),
+          radial-gradient(1000px 600px at 90% 15%, rgba(99, 102, 241, 0.18), transparent 60%),
+          linear-gradient(135deg, var(--bg), var(--bg-2));
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 20px 56px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .logo {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-family: "Space Grotesk", "Manrope", sans-serif;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b1020;
+        box-shadow: 0 12px 24px rgba(56, 189, 248, 0.3);
+      }
+
+      .brand h1 {
+        font-size: 22px;
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .brand p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .pill.good {
+        color: var(--success);
+        border-color: rgba(52, 211, 153, 0.4);
+      }
+
+      .pill.warn {
+        color: var(--warning);
+        border-color: rgba(251, 191, 36, 0.4);
+      }
+
+      .pill.bad {
+        color: var(--danger);
+        border-color: rgba(248, 113, 113, 0.4);
+      }
+
+      .ghost-button {
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 600;
+        background: transparent;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+        margin-top: 22px;
+        padding: 24px;
+        border-radius: 20px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .hero h2 {
+        font-size: 32px;
+        margin: 0 0 12px;
+        font-family: "Space Grotesk", "Manrope", sans-serif;
+      }
+
+      .hero p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .hero-card {
+        background: var(--panel-solid);
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid var(--border);
+      }
+
+      .hero-card h3 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .hero-card .value {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .section {
+        margin-top: 24px;
+        padding: 22px;
+        border-radius: 20px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .section h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .section p {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+
+      form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      input[type="text"] {
+        flex: 1 1 320px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #0b1226;
+        color: var(--text);
+        font-size: 15px;
+      }
+
+      button.primary {
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b1020;
+        font-weight: 700;
+        cursor: pointer;
+        min-width: 150px;
+      }
+
+      button.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .status.good {
+        color: var(--success);
+      }
+
+      .status.warn {
+        color: var(--warning);
+      }
+
+      .status.bad {
+        color: var(--danger);
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--text);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .result {
+        display: none;
+        margin-top: 18px;
+        gap: 18px;
+      }
+
+      .result.active {
+        display: grid;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .verdict {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .verdict.phishing {
+        color: var(--danger);
+      }
+
+      .verdict.legitimate {
+        color: var(--success);
+      }
+
+      .confidence {
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .meter {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.15);
+        overflow: hidden;
+      }
+
+      .meter-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 0.4s ease;
+      }
+
+      .model-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+
+      .model-card {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(11, 18, 38, 0.8);
+      }
+
+      .model-card h4 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .model-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .list-item {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(11, 18, 38, 0.75);
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      footer {
+        margin-top: 32px;
+        color: var(--muted);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      @media (max-width: 720px) {
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        form {
+          flex-direction: column;
+        }
+
+        button.primary {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">DS</div>
+          <div>
+            <h1>DeepShield</h1>
+            <p>Phishing detection system</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="api-badge" class="pill">API: checking</span>
+          <a class="ghost-button" href="/docs" target="_blank" rel="noopener">API Docs</a>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <h2>Detect phishing URLs before they land</h2>
+          <p>
+            A streamlined interface backed by DeepShield models. Paste a URL, run the scan,
+            and review model level predictions in seconds.
+          </p>
+          <div class="tag-row">
+            <span class="tag">ML ensemble</span>
+            <span class="tag">FastAPI backend</span>
+            <span class="tag">Real-time scoring</span>
+            <span class="tag">Zero-day ready</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <h3>System status</h3>
+          <div class="value" id="status-summary">Checking</div>
+          <p class="status" id="status-detail">Waiting for API response.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h3>Scan a URL</h3>
+        <p>Use the scanner below to classify a URL as phishing or legitimate.</p>
+        <form id="scan-form">
+          <input id="url-input" type="text" placeholder="https://example.com/login" />
+          <button id="scan-button" class="primary" type="submit">Scan URL</button>
+        </form>
+        <div class="status" id="scan-status">Enter a URL to begin.</div>
+        <div class="chips" style="margin-top: 12px;">
+          <button class="chip" type="button" data-url="https://www.google.com">Google (legit)</button>
+          <button class="chip" type="button" data-url="http://paypal-verify.tk/login">Phishing sample</button>
+        </div>
+
+        <div id="result-card" class="result">
+          <div class="result-header">
+            <div id="verdict" class="verdict">Verdict</div>
+            <div id="confidence" class="confidence">Confidence</div>
+          </div>
+          <div class="meter">
+            <div id="confidence-bar" class="meter-fill"></div>
+          </div>
+          <div class="status">
+            Recommendation: <span id="recommendation">n/a</span>
+          </div>
+          <div class="status">
+            Analyzed URL: <span id="analyzed-url">n/a</span>
+          </div>
+          <div class="model-grid" id="model-grid"></div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="section" style="margin: 0;">
+          <h3>API Health</h3>
+          <div class="list">
+            <div class="list-item" id="health-status">Status: checking</div>
+            <div class="list-item" id="health-counts">Models: 0</div>
+            <div class="list-item" id="health-updated">Last check: --</div>
+          </div>
+        </div>
+
+        <div class="section" style="margin: 0;">
+          <h3>Loaded Models</h3>
+          <div class="list" id="models-list">
+            <div class="list-item">Waiting for API...</div>
+          </div>
+        </div>
+
+        <div class="section" style="margin: 0;">
+          <h3>Performance Stats</h3>
+          <div class="list" id="stats-list">
+            <div class="list-item">Waiting for metrics...</div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        DeepShield UI served by FastAPI. Open <a href="/docs">/docs</a> for API testing.
+      </footer>
+    </div>
+
+    <script>
+      const apiBadge = document.getElementById("api-badge");
+      const statusSummary = document.getElementById("status-summary");
+      const statusDetail = document.getElementById("status-detail");
+      const scanStatus = document.getElementById("scan-status");
+      const urlInput = document.getElementById("url-input");
+      const scanButton = document.getElementById("scan-button");
+      const resultCard = document.getElementById("result-card");
+      const verdictEl = document.getElementById("verdict");
+      const confidenceEl = document.getElementById("confidence");
+      const confidenceBar = document.getElementById("confidence-bar");
+      const recommendationEl = document.getElementById("recommendation");
+      const analyzedUrlEl = document.getElementById("analyzed-url");
+      const modelGrid = document.getElementById("model-grid");
+      const healthStatus = document.getElementById("health-status");
+      const healthCounts = document.getElementById("health-counts");
+      const healthUpdated = document.getElementById("health-updated");
+      const modelsList = document.getElementById("models-list");
+      const statsList = document.getElementById("stats-list");
+
+      function setBadge(text, tone) {
+        apiBadge.textContent = text;
+        apiBadge.className = "pill" + (tone ? " " + tone : "");
+      }
+
+      function setScanStatus(text, tone) {
+        scanStatus.textContent = text;
+        scanStatus.className = "status" + (tone ? " " + tone : "");
+      }
+
+      function setStatusSummary(text, detail) {
+        statusSummary.textContent = text;
+        statusDetail.textContent = detail;
+      }
+
+      function normalizeUrl(value) {
+        if (!value) return "";
+        return value.includes("://") ? value : "https://" + value;
+      }
+
+      async function fetchJson(path, options) {
+        const response = await fetch(path, options);
+        if (response.ok) {
+          return response.json();
+        }
+        let message = "Request failed: HTTP " + response.status;
+        try {
+          const data = await response.json();
+          if (data && data.detail) {
+            message = data.detail;
+          }
+        } catch (err) {
+          // ignore parse errors
+        }
+        throw new Error(message);
+      }
+
+      function renderModelsList(models) {
+        if (!models || models.length === 0) {
+          modelsList.innerHTML = "<div class='list-item'>No models reported.</div>";
+          return;
+        }
+
+        modelsList.innerHTML = models
+          .map((model) => {
+            const label = model.name + " (" + model.type + ")";
+            return "<div class='list-item'>" + label + "</div>";
+          })
+          .join("");
+      }
+
+      function renderStats(stats) {
+        const metrics = stats && stats.metrics ? stats.metrics : {};
+        const entries = Object.entries(metrics);
+        if (entries.length === 0) {
+          statsList.innerHTML = "<div class='list-item'>No metrics available.</div>";
+          return;
+        }
+
+        statsList.innerHTML = entries
+          .map(([model, data]) => {
+            const pairs = Object.entries(data || {})
+              .slice(0, 4)
+              .map(([key, value]) => key + ": " + value)
+              .join(" | ");
+            return "<div class='list-item'>" + model + " - " + pairs + "</div>";
+          })
+          .join("");
+      }
+
+      function renderPrediction(data) {
+        const verdict = data.verdict || "Unknown";
+        verdictEl.textContent = verdict;
+        verdictEl.className = "verdict " + (verdict === "Phishing" ? "phishing" : "legitimate");
+
+        const confidence = typeof data.confidence === "number" ? data.confidence : 0;
+        const confidenceText = (confidence * 100).toFixed(1) + "%";
+        confidenceEl.textContent = "Confidence: " + confidenceText;
+        confidenceBar.style.width = Math.min(confidence * 100, 100) + "%";
+
+        recommendationEl.textContent = data.recommendation || "n/a";
+        analyzedUrlEl.textContent = data.url || "n/a";
+
+        const models = data.ml_models || {};
+        const entries = Object.entries(models);
+        if (entries.length === 0) {
+          modelGrid.innerHTML = "<div class='model-card'><p>No model predictions.</p></div>";
+        } else {
+          modelGrid.innerHTML = entries
+            .map(([name, payload]) => {
+              const label = payload.label || (payload.prediction === 1 ? "Phishing" : "Legitimate");
+              const prob = typeof payload.probability === "number"
+                ? (payload.probability * 100).toFixed(1) + "%"
+                : "n/a";
+              return (
+                "<div class='model-card'>" +
+                "<h4>" + name + "</h4>" +
+                "<p>Verdict: " + label + "</p>" +
+                "<p>Probability: " + prob + "</p>" +
+                "</div>"
+              );
+            })
+            .join("");
+        }
+
+        resultCard.classList.add("active");
+      }
+
+      async function loadSystemInfo() {
+        const now = new Date();
+        healthUpdated.textContent = "Last check: " + now.toLocaleTimeString();
+
+        try {
+          const health = await fetchJson("/health");
+          const mlCount = health.models_loaded?.ml?.length || 0;
+          const dlCount = health.models_loaded?.dl?.length || 0;
+          const total = health.total_models ?? mlCount + dlCount;
+
+          setBadge("API: ready", "good");
+          setStatusSummary("Ready", "Models loaded: " + total);
+          healthStatus.textContent = "Status: " + health.status;
+          healthCounts.textContent = "Models: " + total + " (ML " + mlCount + " / DL " + dlCount + ")";
+        } catch (err) {
+          setBadge("API: unavailable", "bad");
+          setStatusSummary("Unavailable", "Start the API to enable scanning.");
+          healthStatus.textContent = "Status: unavailable";
+          healthCounts.textContent = "Models: 0";
+        }
+
+        try {
+          const models = await fetchJson("/models");
+          renderModelsList(models);
+        } catch (err) {
+          modelsList.innerHTML = "<div class='list-item'>Unable to load models.</div>";
+        }
+
+        try {
+          const stats = await fetchJson("/stats");
+          renderStats(stats);
+        } catch (err) {
+          statsList.innerHTML = "<div class='list-item'>Metrics unavailable.</div>";
+        }
+      }
+
+      document.getElementById("scan-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const rawValue = urlInput.value.trim();
+        if (!rawValue) {
+          setScanStatus("Please enter a URL.", "warn");
+          return;
+        }
+
+        let normalized;
+        try {
+          normalized = normalizeUrl(rawValue);
+          new URL(normalized);
+        } catch (err) {
+          setScanStatus("Please enter a valid URL.", "warn");
+          return;
+        }
+
+        scanButton.disabled = true;
+        scanButton.textContent = "Scanning...";
+        setScanStatus("Scanning URL...", "");
+        resultCard.classList.remove("active");
+
+        try {
+          const data = await fetchJson("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: normalized }),
+          });
+          renderPrediction(data);
+          setScanStatus("Scan complete.", "good");
+        } catch (err) {
+          setScanStatus(err.message || "Scan failed.", "bad");
+        } finally {
+          scanButton.disabled = false;
+          scanButton.textContent = "Scan URL";
+        }
+      });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          urlInput.value = chip.getAttribute("data-url");
+          urlInput.focus();
+        });
+      });
+
+      loadSystemInfo();
+      setInterval(loadSystemInfo, 15000);
+    </script>
+  </body>
+</html>

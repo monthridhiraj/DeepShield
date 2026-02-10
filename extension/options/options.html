@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepShield Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 48px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #3B82F6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 span {
+            display: block;
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 16px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-info h3 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .setting-info p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 28px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: #10B981;
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        /* Input */
+        input[type="text"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 14px;
+            width: 220px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+
+        /* Button */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .saved-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10B981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .saved-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <span class="logo">πŸ›'οΈ</span>
+            <h1>
+                DeepShield Settings
+                <span>Configure your phishing protection</span>
+            </h1>
+        </header>
+
+        <div class="section">
+            <div class="section-title">Protection Settings</div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Enable Protection</h3>
+                    <p>Automatically scan URLs before navigation</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="protection-enabled" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Block High-Risk Pages</h3>
+                    <p>Automatically block pages with >80% phishing confidence</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="auto-block" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Show Safe Badge</h3>
+                    <p>Display a green badge on verified safe pages</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="show-badge" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Desktop Notifications</h3>
+                    <p>Show notifications when threats are blocked</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="notifications" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">API Configuration</div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>API Endpoint</h3>
+                    <p>DeepShield backend server URL</p>
+                </div>
+                <input type="text" id="api-url" value="http://localhost:8000">
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Request Timeout</h3>
+                    <p>Maximum time to wait for API response (ms)</p>
+                </div>
+                <input type="text" id="timeout" value="3000">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Data Management</div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Clear Cache</h3>
+                    <p>Remove all cached URL verdicts</p>
+                </div>
+                <button class="btn btn-danger" id="clear-cache">Clear Cache</button>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h3>Reset Whitelist</h3>
+                    <p>Remove all manually whitelisted domains</p>
+                </div>
+                <button class="btn btn-danger" id="reset-whitelist">Reset Whitelist</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="save-settings">Save Settings</button>
+        </div>
+    </div>
+
+    <div class="saved-toast" id="saved-toast">βœ" Settings saved successfully!</div>
+
+    <script>
+        // Load settings
+        async function loadSettings() {
+            const settings = await chrome.storage.sync.get({
+                protectionEnabled: true,
+                autoBlock: true,
+                showBadge: true,
+                notifications: true,
+                apiUrl: 'http://localhost:8000',
+                timeout: 3000,
+            });
+
+            document.getElementById('protection-enabled').checked = settings.protectionEnabled;
+            document.getElementById('auto-block').checked = settings.autoBlock;
+            document.getElementById('show-badge').checked = settings.showBadge;
+            document.getElementById('notifications').checked = settings.notifications;
+            document.getElementById('api-url').value = settings.apiUrl;
+            document.getElementById('timeout').value = settings.timeout;
+        }
+
+        // Save settings
+        document.getElementById('save-settings').addEventListener('click', async () => {
+            const settings = {
+                protectionEnabled: document.getElementById('protection-enabled').checked,
+                autoBlock: document.getElementById('auto-block').checked,
+                showBadge: document.getElementById('show-badge').checked,
+                notifications: document.getElementById('notifications').checked,
+                apiUrl: document.getElementById('api-url').value,
+                timeout: parseInt(document.getElementById('timeout').value) || 3000,
+            };
+
+            await chrome.storage.sync.set(settings);
+
+            // Show toast
+            const toast = document.getElementById('saved-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        });
+
+        // Clear cache
+        document.getElementById('clear-cache').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to clear the URL cache?')) {
+                await chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' });
+                alert('Cache cleared!');
+            }
+        });
+
+        // Reset whitelist
+        document.getElementById('reset-whitelist').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to reset the whitelist?')) {
+                await chrome.storage.local.remove('whitelist');
+                alert('Whitelist reset!');
+            }
+        });
+
+        loadSettings();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA"/>
+      <stop offset="100%" style="stop-color:#A78BFA"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Shadow -->
+  <path d="M64 12 L108 30 L108 60 C108 90 86 110 64 118 C42 110 20 90 20 60 L20 30 Z" 
+        fill="rgba(0,0,0,0.3)" transform="translate(2,2)"/>
+  
+  <!-- Shield Body -->
+  <path d="M64 12 L108 30 L108 60 C108 90 86 110 64 118 C42 110 20 90 20 60 L20 30 Z" 
+        fill="url(#shieldGrad)" filter="url(#glow)"/>
+  
+  <!-- Inner Shield -->
+  <path d="M64 22 L98 36 L98 58 C98 82 80 99 64 106 C48 99 30 82 30 58 L30 36 Z" 
+        fill="url(#innerGrad)" opacity="0.3"/>
+  
+  <!-- Checkmark -->
+  <path d="M48 62 L58 72 L80 50" 
+        stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Neural network dots -->
+  <circle cx="64" cy="85" r="4" fill="white" opacity="0.6"/>
+  <circle cx="52" cy="78" r="3" fill="white" opacity="0.4"/>
+  <circle cx="76" cy="78" r="3" fill="white" opacity="0.4"/>
+</svg>

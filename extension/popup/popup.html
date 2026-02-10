@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepShield - Phishing Protection</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="shield-icon">🛡️</span>
+        <div class="logo-text">
+          <h1>DeepShield</h1>
+          <span class="tagline">AI-Powered Protection</span>
+        </div>
+      </div>
+      <div class="connection-status" id="connection-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Current Page Status -->
+    <section class="current-status" id="current-status">
+      <div class="status-card loading">
+        <div class="status-icon">
+          <div class="scan-animation">
+            <div class="scan-ring"></div>
+            <div class="scan-ring"></div>
+            <div class="scan-ring"></div>
+          </div>
+        </div>
+        <div class="status-info">
+          <h2 class="status-title">Analyzing...</h2>
+          <p class="status-url" id="current-url">Loading page info...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon safe">✓</div>
+        <div class="stat-value" id="stat-safe">0</div>
+        <div class="stat-label">Safe</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warned">!</div>
+        <div class="stat-value" id="stat-warned">0</div>
+        <div class="stat-label">Warned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blocked">✘</div>
+        <div class="stat-value" id="stat-blocked">0</div>
+        <div class="stat-label">Blocked</div>
+      </div>
+    </section>
+
+    <!-- Verdict Details (shown when available) -->
+    <section class="verdict-details hidden" id="verdict-details">
+      <h3 class="section-title">Analysis Details</h3>
+      <div class="details-grid" id="details-grid">
+        <!-- Filled dynamically -->
+      </div>
+    </section>
+
+    <!-- Model Confidence (collapsible) -->
+    <section class="models-section" id="models-section">
+      <button class="section-toggle" id="models-toggle">
+        <span>📊 Model Confidence</span>
+        <span class="toggle-icon">▼</span>
+      </button>
+      <div class="models-content hidden" id="models-content">
+        <div class="model-bars" id="model-bars">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions">
+      <button class="action-btn" id="rescan-btn" title="Rescan current page">
+        <span class="btn-icon">🔄</span>
+        Rescan
+      </button>
+      <button class="action-btn" id="whitelist-btn" title="Whitelist this domain">
+        <span class="btn-icon">✅</span>
+        Trust Site
+      </button>
+      <button class="action-btn" id="report-btn" title="Report issue">
+        <span class="btn-icon">🚩</span>
+        Report
+      </button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="#" id="settings-link">⚙️ Settings</a>
+      <span class="version">v1.0.0</span>
+      <a href="#" id="help-link">❓ Help</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
