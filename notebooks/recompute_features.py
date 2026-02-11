@@ -12,8 +12,8 @@ from pathlib import Path
 from collections import Counter
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-INPUT_FILE = PROJECT_ROOT / "balanced_features.csv"
-OUTPUT_FILE = PROJECT_ROOT / "balanced_features_v2.csv"
+INPUT_FILE = PROJECT_ROOT / "balanced_urls.csv"
+OUTPUT_FILE = PROJECT_ROOT / "balanced_features.csv"
 
 # Known URL shorteners
 SHORTENERS = {

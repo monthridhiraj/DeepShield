@@ -76,7 +76,9 @@ TRUSTED_DOMAINS = {
     'medium.com', 'quora.com', 'pinterest.com', 'tumblr.com', 'flickr.com',
     'bbc.com', 'cnn.com', 'nytimes.com', 'washingtonpost.com', 'reuters.com',
     'chase.com', 'bankofamerica.com', 'wellsfargo.com', 'citi.com',
-    'googleapis.com', 'gstatic.com', 'cloudflare.com', 'akamai.com'
+    'googleapis.com', 'gstatic.com', 'cloudflare.com', 'akamai.com',
+    'vce.ac.in', 'india.gov.in', 'bcci.tv', 'irctc.co.in',
+    'viswam.ai', 'openai.com', 'anthropic.com'
 }
 
 

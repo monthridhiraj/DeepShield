@@ -24,7 +24,7 @@ import xgboost as xgb
 
 # Configuration
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = PROJECT_ROOT / "balanced_features_v2.csv"
+DATA_PATH = PROJECT_ROOT / "balanced_features.csv"
 MODELS_DIR = PROJECT_ROOT / "models"
 
 def train_ml_models():
@@ -72,9 +72,13 @@ def train_ml_models():
     # 3. Train XGBoost
     print("\n[3/5] Training XGBoost model...")
     xgb_model = xgb.XGBClassifier(
-        n_estimators=300,
-        max_depth=8,
-        learning_rate=0.1,
+        n_estimators=200,      # Reduced from 300
+        max_depth=6,           # Reduced from 8
+        learning_rate=0.05,    # Slower learning
+        reg_alpha=0.1,         # L1 Regularization
+        reg_lambda=1.0,        # L2 Regularization
+        subsample=0.8,         # Train on 80% data
+        colsample_bytree=0.8,  # Train on 80% features
         eval_metric='logloss',
         random_state=42
     )
@@ -94,8 +98,11 @@ def train_ml_models():
     # 4. Train Random Forest
     print("\n[4/5] Training Random Forest model...")
     rf_model = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=20,
+        n_estimators=200,      # Reduced from 300
+        max_depth=12,          # Reduced from 20
+        min_samples_split=5,   # Requires more samples to split
+        min_samples_leaf=2,    # Avoid singleton leaves
+        max_features='sqrt',
         n_jobs=-1,
         random_state=42
     )

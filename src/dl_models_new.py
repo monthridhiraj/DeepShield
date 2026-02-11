@@ -256,7 +256,7 @@ class URLTransformer:
         num_heads: int = 8,
         ff_dim: int = 256,
         num_transformer_blocks: int = 2,
-        dropout_rate: float = 0.1
+        dropout_rate: float = 0.5
     ):
         self.vocab_size = vocab_size
         self.max_length = max_length

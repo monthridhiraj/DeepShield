@@ -16,7 +16,7 @@ const elements = {
     statWarned: document.getElementById('stat-warned'),
     statBlocked: document.getElementById('stat-blocked'),
 
-    // Details
+    // Details(verdict-details)
     verdictDetails: document.getElementById('verdict-details'),
     detailsGrid: document.getElementById('details-grid'),
 
@@ -128,6 +128,12 @@ async function loadCurrentVerdict() {
             // Trigger a scan for the current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (tab?.url && !isInternalUrl(tab.url)) {
+
+                // Show analyzing state
+                const card = elements.currentStatus.querySelector('.status-card');
+                card.classList.add('loading');
+                card.querySelector('.status-title').textContent = 'Analyzing...';
+
                 const newVerdict = await chrome.runtime.sendMessage({
                     type: 'GET_VERDICT',
                     url: tab.url,
@@ -154,6 +160,7 @@ function updateStatusCard(verdict) {
     const card = elements.currentStatus.querySelector('.status-card');
     const iconContainer = card.querySelector('.status-icon');
     const title = card.querySelector('.status-title');
+    const urlDisplay = elements.currentUrl;
 
     // Remove loading state
     card.classList.remove('loading', 'safe', 'warning', 'blocked');
@@ -184,18 +191,28 @@ function updateStatusCard(verdict) {
     card.classList.add(status);
     iconContainer.textContent = icon;
     title.textContent = label;
+    // Keep URL display
 
     // Add confidence bar
+    // Remove old bar if exists
+    const oldBar = card.querySelector('.confidence-bar');
+    if (oldBar) oldBar.remove();
+
     if (verdict.confidence > 0) {
-        let existingBar = card.querySelector('.confidence-bar');
-        if (!existingBar) {
-            existingBar = document.createElement('div');
-            existingBar.className = 'confidence-bar';
-            existingBar.innerHTML = '<div class="confidence-fill"></div>';
-            card.querySelector('.status-info').appendChild(existingBar);
-        }
-        const fill = existingBar.querySelector('.confidence-fill');
-        fill.style.width = `${verdict.confidence * 100}%`;
+        const bar = document.createElement('div');
+        bar.className = 'confidence-bar';
+        bar.innerHTML = '<div class="confidence-fill"></div>';
+        card.querySelector('.status-info').appendChild(bar);
+
+        // Brief timeout to trigger animation if css supports it
+        setTimeout(() => {
+            const fill = bar.querySelector('.confidence-fill');
+            fill.style.width = `${verdict.confidence * 100}%`;
+            // Color based on status
+            if (status === 'safe') fill.style.backgroundColor = '#10b981'; // Green
+            else if (status === 'blocked') fill.style.backgroundColor = '#ef4444'; // Red
+            else fill.style.backgroundColor = '#f59e0b'; // Orange
+        }, 10);
     }
 }
 
@@ -213,15 +230,21 @@ function updateVerdictDetails(verdict) {
         { label: 'Source', value: verdict.fromCache ? 'Cached' : (verdict.offline ? 'Offline' : 'API') },
     ];
 
-    if (verdict.message) {
-        details.push({ label: 'Reason', value: verdict.message });
+    if (verdict.message && verdict.message !== 'Safe') {
+        // Truncate message if too long
+        let msg = verdict.message;
+        if (msg.length > 30) msg = msg.substring(0, 30) + '...';
+        details.push({ label: 'Reason', value: msg });
     }
 
-    // Count models
+    // Model Count
     const mlCount = verdict.mlModels ? Object.keys(verdict.mlModels).length : 0;
     const dlCount = verdict.dlModels ? Object.keys(verdict.dlModels).length : 0;
+
+    // Only show model count if we have models
     if (mlCount + dlCount > 0) {
-        details.push({ label: 'Models Used', value: `${mlCount} ML + ${dlCount} DL = ${mlCount + dlCount} total` });
+        // Simplified display
+        // details.push({ label: 'Models', value: `${mlCount + dlCount}` });
     }
 
     elements.detailsGrid.innerHTML = details.map(d => `
@@ -259,66 +282,49 @@ function updateModelBars(verdict) {
         });
     }
 
+    // If no models (e.g. trusted domain), handle UI
     if (models.length === 0) {
-        // Show trusted domain message if no models were used
-        if (verdict.message && verdict.message.includes('Trusted')) {
+        // If trusted, just hide the section or show a "Trusted" badge
+        if (verdict.confidence > 0.98 && !verdict.isPhishing) {
             elements.modelsSection.classList.remove('hidden');
-            elements.modelsContent.classList.remove('hidden');
+            elements.modelsContent.classList.remove('hidden'); // Show content to see the trusted badge
             elements.modelsToggle.classList.add('open');
+
             elements.modelBars.innerHTML = `
                 <div class="model-bar">
-                    <div class="model-bar-header">
-                        <span class="model-name">Trusted Domain</span>
-                        <span class="model-confidence" style="color: var(--accent-green)">Verified Safe</span>
+                    <div style="text-align: center; padding: 10px; color: #10b981;">
+                        <strong>Verified Trusted Domain</strong><br>
+                        <span style="font-size: 0.8em; opacity: 0.8;">Bypassed AI models for performance</span>
                     </div>
                 </div>
             `;
-        } else {
-            elements.modelsSection.classList.add('hidden');
+            return;
         }
+
+        elements.modelsSection.classList.add('hidden');
         return;
     }
 
-    // Show models section expanded by default
     elements.modelsSection.classList.remove('hidden');
-    elements.modelsContent.classList.remove('hidden');
-    elements.modelsToggle.classList.add('open');
-
-    // Count votes
-    const phishingVotes = models.filter(m => m.isPhishing).length;
-    const safeVotes = models.filter(m => !m.isPhishing).length;
-    const totalModels = models.length;
-
-    // Add vote summary header
-    let voteSummary = `
-    <div class="model-bar" style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1)">
-        <div class="model-bar-header">
-            <span class="model-name" style="font-weight:600">Ensemble Vote</span>
-            <span class="model-confidence">
-                <span style="color: var(--accent-red)">${phishingVotes} Phishing</span> / 
-                <span style="color: var(--accent-green)">${safeVotes} Safe</span>
-                (${totalModels} models)
-            </span>
-        </div>
-    </div>
-    `;
+    elements.modelsToggle.classList.remove('open'); // Default closed? User asked it's not working, maybe start closed.
+    elements.modelsContent.classList.add('hidden');
 
     const modelBarsHtml = models.map(m => `
     <div class="model-bar">
       <div class="model-bar-header">
-        <span class="model-name">${m.name} <span style="opacity:0.5;font-size:10px">${m.type}</span></span>
-        <span class="model-confidence" style="color: ${m.isPhishing ? 'var(--accent-red)' : 'var(--accent-green)'}">
-          ${(m.confidence * 100).toFixed(1)}% ${m.isPhishing ? 'Phishing' : 'Safe'}
+        <span class="model-name">${m.name}</span>
+        <span class="model-confidence" style="color: ${m.isPhishing ? '#ef4444' : '#10b981'}">
+          ${(m.confidence * 100).toFixed(0)}%
         </span>
       </div>
       <div class="model-bar-track">
         <div class="model-bar-fill ${m.isPhishing ? 'phishing' : 'safe'}" 
-             style="width: ${m.confidence * 100}%"></div>
+             style="width: ${m.confidence * 100}%; background-color: ${m.isPhishing ? '#ef4444' : '#10b981'};"></div>
       </div>
     </div>
   `).join('');
 
-    elements.modelBars.innerHTML = voteSummary + modelBarsHtml;
+    elements.modelBars.innerHTML = modelBarsHtml;
 }
 
 function showInternalPage() {
@@ -328,8 +334,8 @@ function showInternalPage() {
 
     card.classList.remove('loading', 'safe', 'warning', 'blocked');
     iconContainer.innerHTML = '🔒';
-    title.textContent = 'Internal Page';
-    elements.currentUrl.textContent = 'Browser internal page - no scan needed';
+    title.textContent = 'System Page';
+    elements.currentUrl.textContent = 'Internal browser page';
 
     elements.verdictDetails.classList.add('hidden');
     elements.modelsSection.classList.add('hidden');
@@ -343,7 +349,7 @@ function showError() {
     card.classList.remove('loading');
     card.classList.add('warning');
     iconContainer.innerHTML = '⚠️';
-    title.textContent = 'Error';
+    title.textContent = 'Connection Error';
 
     elements.verdictDetails.classList.add('hidden');
 }
@@ -354,86 +360,49 @@ function showError() {
 
 function setupEventListeners() {
     // Models toggle
-    elements.modelsToggle.addEventListener('click', () => {
-        elements.modelsToggle.classList.toggle('open');
-        elements.modelsContent.classList.toggle('hidden');
-    });
+    if (elements.modelsToggle) {
+        elements.modelsToggle.addEventListener('click', (e) => {
+            console.log('Toggle clicked');
+            elements.modelsToggle.classList.toggle('open');
+            elements.modelsContent.classList.toggle('hidden');
+            e.stopPropagation(); // Prevent bubbling issues
+        });
+    }
 
     // Rescan button
-    elements.rescanBtn.addEventListener('click', async () => {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.url) {
-            // Clear cache and rescan
-            await chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' });
-
-            // Show loading state
-            const card = elements.currentStatus.querySelector('.status-card');
-            card.classList.add('loading');
-            card.querySelector('.status-icon').innerHTML = `
-        <div class="scan-animation">
-          <div class="scan-ring"></div>
-          <div class="scan-ring"></div>
-          <div class="scan-ring"></div>
-        </div>
-      `;
-            card.querySelector('.status-title').textContent = 'Rescanning...';
-
-            // Get fresh verdict
-            const verdict = await chrome.runtime.sendMessage({
-                type: 'GET_VERDICT',
-                url: tab.url,
-            });
-
-            currentVerdict = verdict;
-            updateStatusCard(verdict);
-            updateVerdictDetails(verdict);
-            updateModelBars(verdict);
-            loadStats();
-        }
-    });
+    if (elements.rescanBtn) {
+        elements.rescanBtn.addEventListener('click', async () => {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.url) {
+                // Clear cache and rescan
+                await chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' });
+                loadCurrentVerdict();
+            }
+        });
+    }
 
     // Whitelist button
-    elements.whitelistBtn.addEventListener('click', async () => {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.url) {
-            const result = await chrome.runtime.sendMessage({
-                type: 'WHITELIST_URL',
-                url: tab.url,
-            });
-
-            if (result.success) {
-                alert(`βœ… Domain ${result.domain} has been whitelisted.`);
-                // Refresh verdict
-                elements.rescanBtn.click();
+    if (elements.whitelistBtn) {
+        elements.whitelistBtn.addEventListener('click', async () => {
+            // Implementation for whitelisting via background script
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.url) {
+                await chrome.runtime.sendMessage({ type: 'WHITELIST_URL', url: tab.url });
+                loadCurrentVerdict(); // reload
             }
-        }
-    });
+        });
+    }
 
-    // Report button
-    elements.reportBtn.addEventListener('click', async () => {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.url && currentVerdict) {
-            // Here you would send to your reporting endpoint
-            chrome.runtime.sendMessage({
-                type: 'REPORT_FALSE_POSITIVE',
-                url: tab.url,
-                verdict: currentVerdict,
-            });
-            alert('πŸ" Thank you! Your report has been submitted for review.');
-        }
-    });
-
-    // Settings link
-    elements.settingsLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        chrome.runtime.openOptionsPage();
-    });
-
-    // Help link
-    elements.helpLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        chrome.tabs.create({ url: 'https://github.com/yourusername/deepshield#readme' });
-    });
+    // Settings Reference
+    if (elements.settingsLink) {
+        elements.settingsLink.addEventListener('click', () => {
+            if (chrome.runtime.openOptionsPage) {
+                chrome.runtime.openOptionsPage();
+            } else {
+                window.open(chrome.runtime.getURL('options.html'));
+            }
+        });
+    }
 }
 
 // ============================================================================
@@ -443,10 +412,10 @@ function setupEventListeners() {
 function truncateUrl(url) {
     try {
         const urlObj = new URL(url);
-        const display = urlObj.hostname + urlObj.pathname;
-        return display.length > 40 ? display.substring(0, 40) + '...' : display;
+        const display = urlObj.hostname + (urlObj.pathname.length > 1 ? urlObj.pathname : '');
+        return display.length > 35 ? display.substring(0, 35) + '...' : display;
     } catch {
-        return url.substring(0, 40) + '...';
+        return url.substring(0, 35) + '...';
     }
 }
 
@@ -465,6 +434,7 @@ function formatModelName(name) {
         'charcnn': 'CharCNN',
         'bilstm': 'BiLSTM',
         'transformer': 'Transformer',
+        'bert': 'Transformer (BERT)'
     };
     return names[name.toLowerCase()] || name;
 }

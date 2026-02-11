@@ -61,11 +61,50 @@ document.addEventListener('DOMContentLoaded', () => {
             // To prevent loop, we should add it to a session whitelist.
 
             chrome.runtime.sendMessage({
-                type: 'WHITELIST_URL', // Reuse whitelist for now effectively
+                type: 'WHITELIST_URL',
                 url: blockedUrl
             }, () => {
                 window.location.href = blockedUrl;
             });
+        }
+    });
+
+    // Report Mistake (Safe) button
+    document.getElementById('report-safe-btn').addEventListener('click', async () => {
+        if (!blockedUrl) return;
+
+        const btn = document.getElementById('report-safe-btn');
+        btn.textContent = 'Reporting...';
+        btn.disabled = true;
+
+        try {
+            // 1. Send feedback to API
+            const response = await fetch('http://localhost:8000/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: blockedUrl,
+                    verdict: 'safe'
+                })
+            });
+
+            if (response.ok) {
+                // 2. Also whitelist locally for instant access
+                chrome.runtime.sendMessage({
+                    type: 'WHITELIST_URL',
+                    url: blockedUrl
+                }, () => {
+                    alert('Thanks! We have marked this site as Safe.');
+                    window.location.href = blockedUrl;
+                });
+            } else {
+                throw new Error('API Error');
+            }
+        } catch (error) {
+            console.error('Feedback failed:', error);
+            alert('Could not report mistake. Please try again.');
+            btn.textContent = 'Report Mistake (Safe)';
+            btn.disabled = false;
         }
     });
 });

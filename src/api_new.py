@@ -20,6 +20,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from model_loader import ModelLoader
 from feature_extraction import FeatureExtractor, FEATURE_NAMES, TRUSTED_DOMAINS
+import feedback_db
 from urllib.parse import urlparse
 
 # Initialize FastAPI
@@ -62,6 +63,10 @@ FEATURE_NAMES_PATH = MODELS_DIR / "feature_names.joblib"
 class PredictRequest(BaseModel):
     url: str = Field(..., description="URL to analyze for phishing")
 
+class FeedbackRequest(BaseModel):
+    url: str = Field(..., description="URL to report")
+    verdict: str = Field(..., description="'safe' or 'phishing'")
+
 
 class ModelPrediction(BaseModel):
     prediction: int
@@ -98,6 +103,11 @@ async def startup_event():
     global model_loader, feature_scaler, expected_features
     
     print("\n" + "="*70)
+    print("STARTING DEEP SHIELD API v2.0")
+    print("="*70)
+    
+    # Initialize Feedback DB
+    feedback_db.init_db()
     print("[*] DEEPSHIELD API STARTING UP")
     print("="*70)
     
@@ -183,6 +193,33 @@ async def list_models():
     return models
 
 
+@app.post("/feedback", tags=["Feedback"])
+async def submit_feedback(request: FeedbackRequest):
+    """Submit user feedback for RL-Lite"""
+    try:
+        # 1. Add to Database
+        success = feedback_db.add_feedback(request.url, request.verdict)
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to save feedback")
+            
+        # 2. Instant Whitelist (Runtime Patch)
+        if request.verdict == 'safe':
+            # Extract domain to whitelist
+            try:
+                parsed = urlparse(request.url)
+                domain = parsed.netloc.lower().replace('www.', '')
+                TRUSTED_DOMAINS.add(domain)
+                print(f"[RL-Lite] Added {domain} to runtime whitelist")
+            except:
+                pass
+        
+        return {"status": "success", "message": "Feedback received. Model will be retrained."}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/predict", response_model=PredictResponse, tags=["Prediction"])
 async def predict_url(request: PredictRequest):
     """Predict if a URL is phishing or legitimate"""
@@ -200,7 +237,9 @@ async def predict_url(request: PredictRequest):
         except Exception:
             base_domain = ''
 
-        if base_domain in TRUSTED_DOMAINS:
+        # Check if domain or base_domain is in trusted list
+        # FIX: Handle multi-part TLDs (e.g. vce.ac.in) by checking the full domain too
+        if domain in TRUSTED_DOMAINS or base_domain in TRUSTED_DOMAINS:
             # Trusted domain - return safe verdict with high confidence
             return PredictResponse(
                 url=request.url,

@@ -30,7 +30,7 @@ MAX_URL_LENGTH = 200
 VOCAB_SIZE = 128  # ASCII
 BATCH_SIZE = 64
 EPOCHS = 5
-SAMPLES_PER_CLASS = 15000  # Adjust based on memory/speed needs
+SAMPLES_PER_CLASS = 120000  # Full dataset usage
 
 def load_data():
     """Load pre-balanced dataset"""
