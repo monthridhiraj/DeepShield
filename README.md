@@ -1,4 +1,4 @@
-# 🛡️ DeepShield v2.0 - AI-Powered Phishing Detection
+# 🛡️ DeepShield - AI-Powered Phishing Detection
 
 DeepShield is a cutting-edge browser extension that detects and blocks phishing websites in real-time using advanced Machine Learning (ML) and Deep Learning (DL) models. It provides proactive protection by analyzing URLs instantly and blocking malicious sites before they can steal your data.
 
