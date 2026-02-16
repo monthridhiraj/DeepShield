@@ -24,28 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         advancedOptions.classList.toggle('hidden');
     });
 
-    // Whitelist button
-    document.getElementById('whitelist-btn').addEventListener('click', async () => {
-        if (blockedUrl) {
-            try {
-                const result = await chrome.runtime.sendMessage({
-                    type: 'WHITELIST_URL',
-                    url: blockedUrl
-                });
-
-                if (result && result.success) {
-                    // Redirect to the original URL
-                    window.location.href = blockedUrl;
-                } else {
-                    alert('Failed to whitelist. Please try again.');
-                }
-            } catch (error) {
-                console.error('Whitelist error:', error);
-                alert('Extension error: Could not whitelist.');
-            }
-        }
-    });
-
     // Proceed button (unsafe)
     document.getElementById('proceed-btn').addEventListener('click', () => {
         if (blockedUrl) {

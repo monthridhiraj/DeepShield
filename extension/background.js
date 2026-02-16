@@ -372,6 +372,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'REPORT_SAFE') {
+    const url = message.url;
+    const domain = extractDomain(url);
+
+    // Call the feedback API from background (no CSP issues here)
+    fetch(`${CONFIG.API_BASE_URL}/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, verdict: 'safe' })
+    })
+      .then(response => {
+        if (response.ok) {
+          // Also whitelist the domain locally
+          if (domain) {
+            TRUSTED_DOMAINS.add(domain);
+            urlCache.delete(url);
+          }
+          sendResponse({ success: true });
+        } else {
+          sendResponse({ success: false, error: 'API error' });
+        }
+      })
+      .catch(error => {
+        console.error('[DeepShield] Feedback API error:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
+  }
+
   if (message.type === 'CLEAR_CACHE') {
     urlCache.clear();
     sendResponse({ success: true });

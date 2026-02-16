@@ -108,6 +108,16 @@ async def startup_event():
     
     # Initialize Feedback DB
     feedback_db.init_db()
+    
+    # Load persistent whitelist
+    try:
+        whitelisted = feedback_db.get_whitelisted_domains()
+        for domain in whitelisted:
+            TRUSTED_DOMAINS.add(domain)
+        print(f"[INFO] Loaded {len(whitelisted)} whitelisted domains from database")
+    except Exception as e:
+        print(f"[WARN] Failed to load whitelist: {e}")
+        
     print("[*] DEEPSHIELD API STARTING UP")
     print("="*70)
     
@@ -325,7 +335,8 @@ async def get_statistics():
     
     return {
         "message": "Model statistics",
-        "models": model_loader.get_model_info()
+        "models": model_loader.get_model_info(),
+        "rl_dataset_stats": feedback_db.get_feedback_stats()
     }
 
 

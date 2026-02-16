@@ -41,33 +41,32 @@ function createOverlay(verdict, type = 'block') {
       
       <div class="deepshield-details">
         <div class="deepshield-url">
-          <span class="label">URL:</span>
+          <span class="label">Malicious URL Detected</span>
           <span class="value">${escapeHtml(window.location.href)}</span>
         </div>
-        <div class="deepshield-confidence">
-          <span class="label">Threat Confidence:</span>
-          <span class="value">${(verdict.confidence * 100).toFixed(1)}%</span>
-        </div>
-        ${verdict.message ? `
-        <div class="deepshield-reason">
-          <span class="label">Reason:</span>
-          <span class="value">${escapeHtml(verdict.message)}</span>
-        </div>
-        ` : ''}
       </div>
       
       <div class="deepshield-actions">
         <button class="deepshield-btn deepshield-btn-primary" id="deepshield-go-back">
-          ← Go Back to Safety
+          ← Back to Safety
         </button>
-        ${!isBlock ? `
-        <button class="deepshield-btn deepshield-btn-secondary" id="deepshield-proceed">
-          Proceed Anyway (Not Recommended)
+        <button class="deepshield-btn deepshield-btn-secondary" id="deepshield-advanced-toggle">
+          View Advanced Options
         </button>
-        ` : ''}
-        <button class="deepshield-btn deepshield-btn-tertiary" id="deepshield-report">
-          Report False Positive
-        </button>
+      </div>
+      
+      <div class="deepshield-advanced-options" id="deepshield-advanced" style="display:none;">
+        <p style="color: rgba(255,255,255,0.5) !important; font-size: 13px !important; margin: 0 0 12px 0 !important;">
+          Only proceed if you are 100% sure this website is safe.
+        </p>
+        <div style="display: flex !important; gap: 10px !important; justify-content: center !important; flex-wrap: wrap !important;">
+          <button class="deepshield-btn deepshield-btn-danger" id="deepshield-proceed">
+            Ignore & Proceed
+          </button>
+          <button class="deepshield-btn deepshield-btn-safe" id="deepshield-report">
+            Report Mistake (Safe)
+          </button>
+        </div>
       </div>
       
       <div class="deepshield-footer">
@@ -88,7 +87,9 @@ function createOverlay(verdict, type = 'block') {
   document.body.appendChild(overlay);
   overlayVisible = true;
 
-  // Event listeners
+  // ---- EVENT LISTENERS ----
+
+  // Go Back
   document.getElementById('deepshield-go-back')?.addEventListener('click', () => {
     window.history.back();
     setTimeout(() => {
@@ -98,8 +99,17 @@ function createOverlay(verdict, type = 'block') {
     }, 100);
   });
 
+  // Toggle Advanced Options
+  document.getElementById('deepshield-advanced-toggle')?.addEventListener('click', () => {
+    const adv = document.getElementById('deepshield-advanced');
+    if (adv) {
+      adv.style.display = adv.style.display === 'none' ? 'block' : 'none';
+    }
+  });
+
+  // Ignore & Proceed
   document.getElementById('deepshield-proceed')?.addEventListener('click', () => {
-    if (confirm('⚠️ Are you sure you want to proceed? This site may steal your personal information.')) {
+    if (confirm('⚠️ Are you sure? This site may steal your personal information.')) {
       removeOverlay();
       chrome.runtime.sendMessage({
         type: 'WHITELIST_URL',
@@ -108,13 +118,22 @@ function createOverlay(verdict, type = 'block') {
     }
   });
 
-  document.getElementById('deepshield-report')?.addEventListener('click', () => {
-    chrome.runtime.sendMessage({
-      type: 'REPORT_FALSE_POSITIVE',
-      url: window.location.href,
-      verdict,
+  // Report Mistake (Safe) — calls API + whitelists + removes overlay
+  document.getElementById('deepshield-report')?.addEventListener('click', async () => {
+    const url = window.location.href;
+    const btn = document.getElementById('deepshield-report');
+    if (btn) { btn.textContent = 'Reporting...'; btn.disabled = true; }
+
+    // Route through background script (content script fetch blocked by page CSP)
+    chrome.runtime.sendMessage({ type: 'REPORT_SAFE', url }, (response) => {
+      if (response && response.success) {
+        removeOverlay();
+        showToast('✅', 'Reported as safe. You can now browse this site.');
+      } else {
+        alert('Failed to submit report. Please try again.');
+        if (btn) { btn.textContent = 'Report Mistake (Safe)'; btn.disabled = false; }
+      }
     });
-    alert('Thank you! Your report has been submitted for review.');
   });
 
   // Prevent interaction with underlying page for blocks
@@ -133,6 +152,42 @@ function removeOverlay() {
     document.body.style.overflow = '';
     overlayVisible = false;
   }
+}
+
+/**
+ * Show a toast notification
+ */
+function showToast(icon, message) {
+  const toast = document.createElement('div');
+  toast.id = 'deepshield-toast';
+  toast.innerHTML = `
+    <span style="margin-right:8px;">${icon}</span>
+    <span>${message}</span>
+  `;
+  toast.style.cssText = `
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: linear-gradient(135deg, #10B981, #059669) !important;
+    color: white !important;
+    padding: 14px 28px !important;
+    border-radius: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    z-index: 2147483647 !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+    display: flex !important;
+    align-items: center !important;
+    animation: deepshield-fade-in 0.3s ease-out !important;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 /**
@@ -162,6 +217,7 @@ function getOverlayStyles(accentColor) {
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      overflow-y: auto !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
       animation: deepshield-fade-in 0.3s ease-out !important;
     }
@@ -230,38 +286,24 @@ function getOverlayStyles(accentColor) {
       border-radius: 12px !important;
       padding: 20px !important;
       margin-bottom: 32px !important;
-      text-align: left !important;
-    }
-    
-    .deepshield-details > div {
-      display: flex !important;
-      justify-content: space-between !important;
-      padding: 8px 0 !important;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    
-    .deepshield-details > div:last-child {
-      border-bottom: none !important;
+      text-align: center !important;
     }
     
     .deepshield-details .label {
       color: rgba(255, 255, 255, 0.5) !important;
-      font-size: 13px !important;
+      font-size: 12px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+      display: block !important;
+      margin-bottom: 8px !important;
     }
     
     .deepshield-details .value {
       color: white !important;
-      font-size: 13px !important;
+      font-size: 14px !important;
       font-weight: 500 !important;
-      max-width: 300px !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      white-space: nowrap !important;
-    }
-    
-    .deepshield-details .deepshield-confidence .value {
-      color: ${accentColor} !important;
-      font-weight: 700 !important;
+      word-break: break-all !important;
+      white-space: normal !important;
     }
     
     .deepshield-actions {
@@ -311,6 +353,32 @@ function getOverlayStyles(accentColor) {
     
     .deepshield-btn-tertiary:hover {
       color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .deepshield-btn-danger {
+      background: transparent !important;
+      color: #EF4444 !important;
+      font-size: 13px !important;
+      padding: 10px 16px !important;
+      border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    }
+    
+    .deepshield-btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: #F87171 !important;
+    }
+    
+    .deepshield-btn-safe {
+      background: linear-gradient(135deg, #10B981, #059669) !important;
+      color: white !important;
+      font-size: 13px !important;
+      padding: 10px 16px !important;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    }
+    
+    .deepshield-btn-safe:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
     }
     
     .deepshield-footer {

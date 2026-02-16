@@ -55,7 +55,9 @@ SUSPICIOUS_TLDS = {
 TRUSTED_TLDS = {
     '.edu', '.gov', '.mil', '.int', '.ac.uk', '.edu.au', '.gov.uk',
     '.ac.ke', '.edu.eg', '.ac.kr', '.edu.vn', '.edu.br', '.edu.in',
-    '.lg.jp', '.go.jp', '.gov.il', '.gov.pl', '.org.uk', '.co.uk'
+    '.lg.jp', '.go.jp', '.gov.il', '.gov.pl', '.org.uk', '.co.uk',
+    # Common TLDs (Added to reduce false positives on short domains)
+    '.com', '.org', '.net', '.io', '.co', '.ai', '.info'
 }
 
 # Brand names for subdomain detection

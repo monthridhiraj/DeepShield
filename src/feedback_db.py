@@ -6,6 +6,7 @@ Handles storage of user feedback for RL-Lite (Active Learning)
 import sqlite3
 import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 # Database path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -64,6 +65,53 @@ def get_all_feedback():
     except Exception as e:
         print(f"[ERROR] Failed to retrieve feedback: {e}")
         return []
+
+def get_whitelisted_domains():
+    """Get list of domains user marked as safe"""
+    try:
+        feedback = get_all_feedback()
+        safe_domains = set()
+        
+        for item in feedback:
+            if item['verdict'] == 'safe':
+                try:
+                    # Extract domain from URL
+                    parsed = urlparse(item['url'])
+                    domain = parsed.netloc.lower().replace('www.', '')
+                    if domain:
+                        safe_domains.add(domain)
+                except:
+                    continue
+                    
+        return list(safe_domains)
+    except Exception as e:
+        print(f"[ERROR] Failed to get whitelist: {e}")
+        return []
+
+def get_feedback_stats():
+    """Get statistics about collected feedback for RL monitoring"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM feedback")
+        total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM feedback WHERE verdict='safe'")
+        safe_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM feedback WHERE verdict='phishing'")
+        phishing_count = cursor.fetchone()[0]
+        
+        conn.close()
+        return {
+            "total_samples": total,
+            "safe_samples": safe_count,
+            "phishing_samples": phishing_count
+        }
+    except Exception as e:
+        print(f"[ERROR] Failed to get stats: {e}")
+        return {"total_samples": 0, "safe_samples": 0, "phishing_samples": 0}
 
 if __name__ == "__main__":
     init_db()
