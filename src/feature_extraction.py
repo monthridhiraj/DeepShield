@@ -56,6 +56,7 @@ TRUSTED_TLDS = {
     '.edu', '.gov', '.mil', '.int', '.ac.uk', '.edu.au', '.gov.uk',
     '.ac.ke', '.edu.eg', '.ac.kr', '.edu.vn', '.edu.br', '.edu.in',
     '.lg.jp', '.go.jp', '.gov.il', '.gov.pl', '.org.uk', '.co.uk',
+    '.gov.in', '.nic.in',  # Added to fix False Positives on Indian Govt sites
     # Common TLDs (Added to reduce false positives on short domains)
     '.com', '.org', '.net', '.io', '.co', '.ai', '.info'
 }
@@ -80,6 +81,7 @@ TRUSTED_DOMAINS = {
     'chase.com', 'bankofamerica.com', 'wellsfargo.com', 'citi.com',
     'googleapis.com', 'gstatic.com', 'cloudflare.com', 'akamai.com',
     'vce.ac.in', 'india.gov.in', 'bcci.tv', 'irctc.co.in',
+    'isro.gov.in', 'nrsc.gov.in', 'uidai.gov.in', 'mygov.in',
     'viswam.ai', 'openai.com', 'anthropic.com'
 }
 

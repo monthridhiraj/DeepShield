@@ -26,20 +26,10 @@ wheels/
 *.egg
 MANIFEST
 
-# Large Datasets and Files
-balanced_features.csv
-balanced_features_v2.csv
-balanced_labels.csv
-majestic_million.csv
-OpenPhish.txt
-PhishTank.csv
-balanced_urls.csv
-UCI Phishing Dataset.csv
-*.csv
-*.txt
-*.zip
-*.tar.gz
-*.rar
+
+# Large Datasets & Secrets (Phishing URLs trigger secret scanning)
+data/
+
 
 # Models (optional - keep small ones, ignore large ones if needed)
 # models/*.h5
